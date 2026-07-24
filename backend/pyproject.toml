@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "hiremind-ai"
+version = "0.1.0"
+description = "Production-grade HireMind AI backend — FastAPI, LangGraph, Gemini, MongoDB Atlas."
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{ include = "app" }]
+
+# NOTE: This file grows incrementally with each module.
+# Module 1 only pulls in what's needed for the core app skeleton:
+# config, logging, exceptions, and the DB connection lifecycle.
+# Later modules (auth, LangGraph/Gemini, Deepgram, Judge0, WeasyPrint, RAG)
+# will add their dependencies via `poetry add` in their own module, not upfront —
+# a project's dependency list should reflect what the code actually uses.
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.32.0" }
+motor = "^3.6.0"
+pydantic = "^2.9.2"
+pydantic-settings = "^2.6.0"
+python-dotenv = "^1.0.1"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+pytest-asyncio = "^0.24.0"
+httpx = "^0.27.2"
+ruff = "^0.7.1"
+mypy = "^1.13.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
