@@ -41,7 +41,15 @@ class MongoDB:
         settings = get_settings()
         logger.info("mongodb_connecting", extra={"extra_fields": {"db": settings.mongodb_db_name}})
 
-        self.client = AsyncIOMotorClient(settings.mongodb_uri)
+        # `tz_aware=True` is essential: by default, Motor/pymongo return
+        # naive `datetime` objects (UTC values, but without tzinfo set).
+        # Every datetime this codebase creates uses
+        # `datetime.now(timezone.utc)` (aware). Without this flag, any
+        # comparison between a freshly-created datetime and one read back
+        # from MongoDB (e.g. checking refresh-token expiry) raises
+        # `TypeError: can't compare offset-naive and offset-aware datetimes`
+        # — a subtle bug that's easy to miss until it fires in production.
+        self.client = AsyncIOMotorClient(settings.mongodb_uri, tz_aware=True)
         self.database = self.client[settings.mongodb_db_name]
 
         # `ping` is the recommended lightweight way to verify connectivity

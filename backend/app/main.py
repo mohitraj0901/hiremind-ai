@@ -23,9 +23,11 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.v1.routes.auth import router as auth_router
 from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging_config import configure_logging, get_logger, request_id_ctx_var
+from app.db.indexes import create_indexes
 from app.db.mongodb import mongo_db
 
 logger = get_logger(__name__)
@@ -43,6 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("app_startup_begin")
 
     await mongo_db.connect()
+    await create_indexes(mongo_db.get_database())
 
     logger.info("app_startup_complete")
     yield  # ---- app runs here ----
@@ -141,12 +144,12 @@ def _register_routes(app: FastAPI) -> None:
     """
     Registers all API routers under the versioned API prefix.
 
-    Module 1 only has the health check. Each subsequent module adds one
-    line here, e.g.:
-        app.include_router(auth_router, prefix=settings.api_v1_prefix)
-    keeping route registration centralized and easy to audit.
+    Each module adds one `include_router` line here, keeping route
+    registration centralized and easy to audit.
     """
     settings = get_settings()
+
+    app.include_router(auth_router, prefix=settings.api_v1_prefix)
 
     @app.get("/health", tags=["System"], summary="Liveness and DB connectivity check")
     async def health_check() -> JSONResponse:
